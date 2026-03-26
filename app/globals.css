@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #0a0a0a;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f5f4f0;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-info: #2563eb;
+
+  --color-text-primary: #0a0a0a;
+  --color-text-secondary: rgba(0, 0, 0, 0.5);
+  --color-text-tertiary: rgba(0, 0, 0, 0.35);
+
+  --radius-component: 8px;
+  --radius-card: 12px;
+  --radius-pill: 9999px;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  body {
+    height: 100%;
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+  }
+
+  /* Remove default focus ring — rely on visible focus styles */
+  :focus-visible {
+    outline: 2px solid var(--color-info);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Scrollbar — minimal */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+  }
+}
+
+@layer components {
+  /* Card base */
+  .card {
+    @apply bg-white border border-[rgba(0,0,0,0.08)] rounded-[12px];
+  }
+
+  /* Input base */
+  .input-base {
+    @apply w-full px-3 py-2 text-sm bg-white border border-[rgba(0,0,0,0.12)] rounded-[8px]
+    placeholder:text-[rgba(0,0,0,0.35)]
+    focus:outline-none focus:border-[rgba(0,0,0,0.3)] focus:ring-0
+    transition-colors duration-150;
+  }
+
+  /* Button base variants */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
+    bg-[#0a0a0a] text-white rounded-[8px]
+    hover:bg-[#1a1a1a] active:bg-[#000]
+    transition-colors duration-150 cursor-pointer
+    disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 text-sm font-medium
+    bg-white text-[#0a0a0a] border border-[rgba(0,0,0,0.12)] rounded-[8px]
+    hover:bg-[#f5f4f0] active:bg-[rgba(0,0,0,0.06)]
+    transition-colors duration-150 cursor-pointer
+    disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-3 py-1.5 text-sm
+    text-[rgba(0,0,0,0.5)] rounded-[8px]
+    hover:bg-[#f5f4f0] hover:text-[#0a0a0a]
+    transition-colors duration-150 cursor-pointer;
+  }
+}
