@@ -8,54 +8,46 @@ interface StatusBadgeProps {
   className?: string
 }
 
-const badgeConfig: Record<BadgeVariant, { label: string; classes: string }> = {
-  // Automation statuses
-  active: {
-    label: 'Actif',
-    classes: 'bg-[#dcfce7] text-[#16a34a]',
-  },
-  paused: {
-    label: 'En pause',
-    classes: 'bg-[#fef3c7] text-[#d97706]',
-  },
-  error: {
-    label: 'Erreur',
-    classes: 'bg-[#fee2e2] text-[#dc2626]',
-  },
-  pending: {
-    label: 'En attente',
-    classes: 'bg-[rgba(0,0,0,0.05)] text-[rgba(0,0,0,0.5)]',
-  },
-  // Execution statuses
-  success: {
-    label: 'Succès',
-    classes: 'bg-[#dcfce7] text-[#16a34a]',
-  },
-  // Subscription statuses
-  canceled: {
-    label: 'Annulé',
-    classes: 'bg-[rgba(0,0,0,0.05)] text-[rgba(0,0,0,0.4)]',
-  },
-  past_due: {
-    label: 'Paiement en retard',
-    classes: 'bg-[#fee2e2] text-[#dc2626]',
-  },
+const badgeConfig: Record<BadgeVariant, { label: string }> = {
+  active:    { label: 'Actif' },
+  paused:    { label: 'En pause' },
+  error:     { label: 'Erreur' },
+  pending:   { label: 'En attente' },
+  success:   { label: 'Succès' },
+  canceled:  { label: 'Annulé' },
+  past_due:  { label: 'Impayé' },
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = badgeConfig[status] ?? {
-    label: status,
-    classes: 'bg-[rgba(0,0,0,0.05)] text-[rgba(0,0,0,0.5)]',
-  }
+  const config = badgeConfig[status] ?? { label: status }
+  const isActive = status === 'active'
 
   return (
     <span
-      className={cn(
-        'inline-flex items-center px-2 py-0.5 rounded-[9999px] text-xs font-medium',
-        config.classes,
-        className
-      )}
+      className={cn(className)}
+      style={isActive ? {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        padding: '2px 8px',
+        fontSize: '10px',
+        fontWeight: 500,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: '#16a34a',
+        background: '#dcfce7',
+        borderRadius: '4px',
+      } : {
+        fontSize: '10px',
+        fontWeight: 500,
+        letterSpacing: '0.15em',
+        textTransform: 'uppercase',
+        color: '#a1a1aa',
+      }}
     >
+      {isActive && (
+        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#16a34a', flexShrink: 0, display: 'inline-block' }} />
+      )}
       {config.label}
     </span>
   )

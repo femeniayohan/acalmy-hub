@@ -14,9 +14,10 @@ const BUDGET_OPTIONS = [
 
 interface CustomRequestFormProps {
   slug: string
+  onSuccess?: () => void
 }
 
-export function CustomRequestForm({ slug }: CustomRequestFormProps) {
+export function CustomRequestForm({ slug, onSuccess }: CustomRequestFormProps) {
   const [description, setDescription] = useState('')
   const [tools, setTools] = useState('')
   const [budget, setBudget] = useState('')
@@ -44,6 +45,7 @@ export function CustomRequestForm({ slug }: CustomRequestFormProps) {
       }
 
       setSubmitted(true)
+      onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inattendue')
     } finally {

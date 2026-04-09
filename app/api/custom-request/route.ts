@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { Resend } from 'resend'
 import { getTenantFromUser } from '@/lib/tenant'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
@@ -16,11 +17,25 @@ export async function POST(request: NextRequest) {
   const tenantCtx = await getTenantFromUser(userId)
   const tenantCompany = tenantCtx?.tenantCompany ?? 'Inconnu'
   const tenantSlug = tenantCtx?.tenantSlug ?? ''
+  const tenantId = tenantCtx?.tenantId ?? null
 
   const { description, tools, budget, slug } = await request.json()
 
   if (!description?.trim()) {
     return NextResponse.json({ error: 'Description requise' }, { status: 400 })
+  }
+
+  // Limit content lengths to prevent abuse
+  if (description.length > 5000) {
+    return NextResponse.json({ error: 'Description trop longue (max 5000 caractères)' }, { status: 400 })
+  }
+  if (tools && tools.length > 500) {
+    return NextResponse.json({ error: 'Champ outils trop long (max 500 caractères)' }, { status: 400 })
+  }
+
+  const VALID_BUDGETS = new Set(['lt500', '500_1500', '1500_3000', 'gt3000', 'unknown', null, undefined, ''])
+  if (!VALID_BUDGETS.has(budget)) {
+    return NextResponse.json({ error: 'Budget invalide' }, { status: 400 })
   }
 
   const budgetLabels: Record<string, string> = {
@@ -69,6 +84,20 @@ export async function POST(request: NextRequest) {
   if (error) {
     console.error('[Custom request] Resend error:', error)
     return NextResponse.json({ error: 'Impossible d\'envoyer l\'email' }, { status: 500 })
+  }
+
+  // Persist in DB (silently — email already sent)
+  if (tenantId) {
+    const supabase = createServiceClient()
+    const title = description.trim().slice(0, 80) + (description.length > 80 ? '…' : '')
+    await supabase.from('custom_requests').insert({
+      tenant_id: tenantId,
+      title,
+      description: description.trim(),
+      tools: tools?.trim() || null,
+      budget: budget || null,
+      status: 'pending',
+    })
   }
 
   return NextResponse.json({ success: true })

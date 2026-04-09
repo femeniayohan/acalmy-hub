@@ -49,10 +49,11 @@ export default async function AutomationsPage({ params }: { params: { slug: stri
   ].filter(g => g.items.length > 0)
 
   return (
-    <div className="p-4 sm:p-6 max-w-[800px]">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-[#0a0a0a]">Mes automatisations</h1>
-        <p className="text-sm text-[rgba(0,0,0,0.4)] mt-0.5">
+    <div className="px-10 py-12 max-w-[800px] animate-fade-in">
+      <div className="mb-8">
+        <p className="section-label mb-3">Automatisations</p>
+        <h1 className="page-title">Mes automatisations</h1>
+        <p className="text-sm font-light mt-2" style={{ color: '#a1a1aa' }}>
           {list.length > 0
             ? `${list.length} automatisation${list.length > 1 ? 's' : ''} · ${active.length} active${active.length > 1 ? 's' : ''}`
             : 'Aucune automatisation configurée'}
@@ -60,15 +61,13 @@ export default async function AutomationsPage({ params }: { params: { slug: stri
       </div>
 
       {list.length === 0 ? (
-        <div className="card p-10 text-center">
-          <div className="w-10 h-10 rounded-full bg-[#f5f4f0] flex items-center justify-center mx-auto mb-3">
-            <Zap size={18} className="text-[rgba(0,0,0,0.3)]" />
-          </div>
-          <p className="text-sm font-medium text-[#0a0a0a] mb-1">Aucune automatisation</p>
-          <p className="text-sm text-[rgba(0,0,0,0.4)] mb-4">
+        <div className="card p-8 text-center">
+          <Zap size={20} strokeWidth={1.5} className="mx-auto mb-4" style={{ color: '#d4d4d8' }} />
+          <p className="text-sm font-medium mb-1" style={{ color: '#27272a' }}>Aucune automatisation</p>
+          <p className="text-sm font-light mb-6" style={{ color: '#a1a1aa' }}>
             Découvrez nos templates prêts à l'emploi ou soumettez une demande sur mesure.
           </p>
-          <div className="flex gap-2 justify-center flex-wrap">
+          <div className="flex gap-3 justify-center flex-wrap">
             <Link href={`/${params.slug}/marketplace`} className="btn-primary">
               Voir le marketplace
             </Link>
@@ -78,13 +77,13 @@ export default async function AutomationsPage({ params }: { params: { slug: stri
           </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {groups.map(group => (
             <section key={group.key}>
-              <h2 className="text-xs font-medium text-[rgba(0,0,0,0.35)] uppercase tracking-wider mb-3">
+              <p className="section-label mb-4">
                 {group.label} · {group.items.length}
-              </h2>
-              <div className="space-y-2">
+              </p>
+              <div className="space-y-px">
                 {group.items.map((automation) => (
                   <AutomationCard
                     key={automation.id}

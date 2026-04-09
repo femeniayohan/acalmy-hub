@@ -66,11 +66,11 @@ function buildEvents(automations: AutomationItem[], executions: ExecutionItem[])
 }
 
 const eventConfig = {
-  activation: { dot: 'bg-[#16a34a]', icon: '⚡' },
-  error: { dot: 'bg-[#dc2626]', icon: '⚠' },
-  success_streak: { dot: 'bg-[#16a34a] opacity-60', icon: '✓' },
-  paused: { dot: 'bg-[#d97706]', icon: '⏸' },
-  new: { dot: 'bg-[#2563eb]', icon: '✦' },
+  activation:     { color: '#16a34a' },
+  error:          { color: '#d4d4d8' },
+  success_streak: { color: '#16a34a' },
+  paused:         { color: '#d4d4d8' },
+  new:            { color: '#a8a29e' },
 }
 
 interface ActivityFeedProps {
@@ -83,9 +83,12 @@ export function ActivityFeed({ automations, executions }: ActivityFeedProps) {
 
   if (events.length === 0) {
     return (
-      <p className="text-sm text-[rgba(0,0,0,0.35)] text-center py-4">
-        Aucune activité récente.
-      </p>
+      <div className="flex flex-col items-center justify-center py-8 gap-3">
+        <div className="text-center">
+          <p className="text-sm font-light" style={{ color: '#a1a1aa' }}>Aucune activité</p>
+          <p className="text-xs font-light mt-0.5" style={{ color: '#a1a1aa' }}>Les événements apparaîtront ici dès la première exécution</p>
+        </div>
+      </div>
     )
   }
 
@@ -95,20 +98,18 @@ export function ActivityFeed({ automations, executions }: ActivityFeedProps) {
         const cfg = eventConfig[event.type]
         return (
           <li key={event.id} className="flex items-start gap-3">
-            <div className="relative shrink-0 mt-1.5">
-              <span className={`block w-2 h-2 rounded-full ${cfg.dot}`} />
-            </div>
+            <span className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: cfg.color }} />
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] text-[#0a0a0a] font-medium leading-tight truncate">
+              <p className="text-sm font-light leading-tight truncate" style={{ color: '#27272a' }}>
                 {event.message}
               </p>
               {event.subtext && (
-                <p className="text-[11px] text-[rgba(0,0,0,0.4)] mt-0.5 truncate">
+                <p className="text-xs font-light mt-0.5 truncate" style={{ color: '#a1a1aa' }}>
                   {event.subtext}
                 </p>
               )}
             </div>
-            <p className="text-[11px] text-[rgba(0,0,0,0.3)] shrink-0 mt-0.5">
+            <p className="text-xs font-light shrink-0 mt-0.5" style={{ color: '#a1a1aa', letterSpacing: '0.05em' }}>
               {formatRelativeTime(event.at)}
             </p>
           </li>

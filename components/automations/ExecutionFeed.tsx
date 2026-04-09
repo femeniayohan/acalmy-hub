@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import { StatusDot } from '@/components/ui/StatusDot'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDate, formatTime, formatDuration } from '@/lib/utils'
@@ -33,8 +33,11 @@ export function ExecutionFeed({ executions, showSummary = true }: ExecutionFeedP
 
   if (executions.length === 0) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-sm text-[rgba(0,0,0,0.35)]">Aucune exécution enregistrée.</p>
+      <div className="p-8 flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-[rgba(0,0,0,0.04)] flex items-center justify-center">
+          <Clock size={18} className="text-[rgba(0,0,0,0.25)]" />
+        </div>
+        <p className="text-sm text-[rgba(0,0,0,0.35)]">Aucune exécution pour le moment</p>
       </div>
     )
   }

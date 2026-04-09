@@ -7,40 +7,21 @@ interface StatusDotProps {
   pulse?: boolean
 }
 
-const statusConfig: Record<AutomationStatus, { color: string; pulseColor: string }> = {
-  active: {
-    color: 'bg-[#16a34a]',
-    pulseColor: 'bg-[#16a34a]',
-  },
-  paused: {
-    color: 'bg-[#d97706]',
-    pulseColor: 'bg-[#d97706]',
-  },
-  error: {
-    color: 'bg-[#dc2626]',
-    pulseColor: 'bg-[#dc2626]',
-  },
-  pending: {
-    color: 'bg-[rgba(0,0,0,0.2)]',
-    pulseColor: 'bg-[rgba(0,0,0,0.2)]',
-  },
-}
-
 export function StatusDot({ status, className, pulse = false }: StatusDotProps) {
-  const config = statusConfig[status]
+  const isActive = status === 'active'
+  const color = isActive ? '#16a34a' : '#d4d4d8'  // emerald-600 or zinc-300
 
   return (
-    <span className={cn('relative flex h-2 w-2 shrink-0', className)}>
-      {pulse && status === 'active' && (
+    <span className={cn('relative flex h-1.5 w-1.5 shrink-0', className)}>
+      {pulse && isActive && (
         <span
-          className={cn(
-            'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75',
-            config.pulseColor
-          )}
+          className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-50"
+          style={{ background: color }}
         />
       )}
       <span
-        className={cn('relative inline-flex rounded-full h-2 w-2', config.color)}
+        className="relative inline-flex rounded-full h-1.5 w-1.5"
+        style={{ background: color }}
       />
     </span>
   )

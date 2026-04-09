@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS tenants (
                     CHECK (plan IN ('infrastructure', 'starter')),
   mrr               INTEGER NOT NULL DEFAULT 0,  -- en centimes
   stripe_customer_id TEXT,
+  n8n_url           TEXT,
+  n8n_api_key       TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -117,6 +119,41 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_tenant_id ON subscriptions(tenant_i
 CREATE INDEX IF NOT EXISTS idx_subscriptions_template_id ON subscriptions(template_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_id ON subscriptions(stripe_subscription_id);
 
+-- Demandes sur mesure
+CREATE TABLE IF NOT EXISTS custom_requests (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL,
+  tools       TEXT,
+  budget      TEXT,
+  status      TEXT NOT NULL DEFAULT 'pending'
+              CHECK (status IN ('pending', 'in_progress', 'delivered')),
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_custom_requests_tenant_id ON custom_requests(tenant_id);
+
+-- Champs call sur custom_requests (migration)
+-- ALTER TABLE custom_requests ADD COLUMN IF NOT EXISTS call_requested BOOLEAN NOT NULL DEFAULT FALSE;
+-- ALTER TABLE custom_requests ADD COLUMN IF NOT EXISTS call_requested_at TIMESTAMPTZ;
+-- ALTER TABLE custom_requests ADD COLUMN IF NOT EXISTS proposed_slot TIMESTAMPTZ;
+-- ALTER TABLE custom_requests ADD COLUMN IF NOT EXISTS slot_status TEXT CHECK (slot_status IN ('pending','confirmed','declined'));
+
+-- Messages de discussion sur une demande sur mesure
+CREATE TABLE IF NOT EXISTS custom_request_messages (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  request_id   UUID NOT NULL REFERENCES custom_requests(id) ON DELETE CASCADE,
+  tenant_id    UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  author_role  TEXT NOT NULL CHECK (author_role IN ('client', 'admin')),
+  author_name  TEXT,
+  content      TEXT NOT NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_crm_request_id ON custom_request_messages(request_id);
+CREATE INDEX IF NOT EXISTS idx_crm_tenant_id  ON custom_request_messages(tenant_id);
+
 -- ─── Row Level Security ───────────────────────────────────────────────────────
 
 ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
@@ -125,8 +162,17 @@ ALTER TABLE automations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE executions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marketplace_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE custom_requests ENABLE ROW LEVEL SECURITY;
 
 -- Service role bypasses RLS automatically (no policy needed for service_role)
+
+-- Custom requests : lecture des demandes de son tenant
+CREATE POLICY "custom_requests_read_own_tenant" ON custom_requests
+  FOR SELECT USING (
+    tenant_id IN (
+      SELECT tenant_id FROM users WHERE clerk_user_id = auth.jwt() ->> 'sub'
+    )
+  );
 
 -- Tenants : lecture uniquement pour les utilisateurs de ce tenant
 CREATE POLICY "tenants_read_own" ON tenants

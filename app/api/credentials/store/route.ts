@@ -5,23 +5,6 @@ import { getTenantFromUser } from '@/lib/tenant'
 
 export const runtime = 'nodejs'
 
-// Rate limiting store (in-memory — use Redis/KV in production for multi-instance)
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(key: string, maxRequests = 10, windowMs = 60_000): boolean {
-  const now = Date.now()
-  const entry = rateLimitStore.get(key)
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs })
-    return true
-  }
-
-  if (entry.count >= maxRequests) return false
-
-  entry.count++
-  return true
-}
 
 /**
  * POST /api/credentials/store
@@ -44,14 +27,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Tenant context missing' }, { status: 400 })
   }
   const { tenantId } = tenantCtx
-
-  // Rate limit: max 10 credential stores per minute per tenant
-  if (!checkRateLimit(`credentials:${tenantId}`, 10, 60_000)) {
-    return NextResponse.json(
-      { error: 'Trop de requêtes. Réessayez dans une minute.' },
-      { status: 429 }
-    )
-  }
 
   let body: { templateId: string; credentials: Record<string, string> }
   try {
@@ -76,20 +51,26 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceClient()
 
-  // Find the automation for this tenant and template (created by Stripe webhook)
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('automation_id')
-    .eq('tenant_id', tenantId)
-    .eq('template_id', templateId)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+  // Find the automation for this tenant and template (created by Stripe webhook).
+  // Retry up to 4 times with 1.5s delay — webhook may not have fired yet.
+  let subscription: { automation_id: string | null } | null = null
+  for (let attempt = 0; attempt < 4; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 1500))
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('automation_id')
+      .eq('tenant_id', tenantId)
+      .eq('template_id', templateId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+    if (data?.automation_id) { subscription = data; break }
+  }
 
   if (!subscription?.automation_id) {
     return NextResponse.json(
-      { error: 'Aucun abonnement actif trouvé pour ce template' },
+      { error: 'Paiement en cours de traitement. Réessayez dans quelques secondes.' },
       { status: 404 }
     )
   }

@@ -17,50 +17,48 @@ export function MobileNav({ slug, companyName }: MobileNavProps) {
   const pathname = usePathname()
 
   const navItems = [
-    { label: 'Tableau de bord', href: `/${slug}/dashboard`, icon: LayoutDashboard },
-    { label: 'Mes automatisations', href: `/${slug}/automations`, icon: Zap },
-    { label: 'Marketplace', href: `/${slug}/marketplace`, icon: ShoppingBag },
-    { label: 'Sur mesure', href: `/${slug}/custom`, icon: PenLine },
+    { label: 'Tableau de bord', href: `/${slug}/dashboard`,   icon: LayoutDashboard },
+    { label: 'Automatisations', href: `/${slug}/automations`, icon: Zap },
+    { label: 'Marketplace',     href: `/${slug}/marketplace`, icon: ShoppingBag },
+    { label: 'Sur mesure',      href: `/${slug}/custom`,      icon: PenLine },
   ]
 
   return (
     <>
-      {/* Mobile top bar */}
-      <header className="flex md:hidden items-center justify-between px-4 h-12 border-b border-[rgba(0,0,0,0.08)] bg-white shrink-0">
-        <span className="text-[15px] font-semibold tracking-tight text-[#0a0a0a]">acalmy</span>
+      <header
+        className="flex md:hidden items-center justify-between px-6 h-14 shrink-0"
+        style={{ background: '#ffffff', borderBottom: '1px solid #eeeeee' }}
+      >
+        <span className="text-xs font-medium tracking-widest uppercase" style={{ color: '#27272a' }}>
+          {companyName}
+        </span>
         <button
           onClick={() => setOpen(true)}
-          className="p-1.5 rounded-[8px] hover:bg-[#f5f4f0] transition-colors"
+          className="p-1.5 transition-colors"
+          style={{ color: '#a1a1aa' }}
           aria-label="Menu"
         >
-          <Menu size={18} />
+          <Menu size={18} strokeWidth={1.5} />
         </button>
       </header>
 
-      {/* Drawer */}
       {open && (
         <>
+          <div className="fixed inset-0 bg-black/10 z-40 md:hidden" onClick={() => setOpen(false)} />
           <div
-            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40 md:hidden"
-            onClick={() => setOpen(false)}
-          />
-          <div className="fixed left-0 top-0 h-full w-[240px] bg-white z-50 flex flex-col p-3 md:hidden shadow-xl">
-            <div className="flex items-center justify-between px-3 mb-4">
-              <span className="text-[15px] font-semibold tracking-tight">acalmy</span>
-              <button
-                onClick={() => setOpen(false)}
-                className="p-1 rounded-[6px] hover:bg-[#f5f4f0] transition-colors"
-              >
-                <X size={16} />
+            className="fixed left-0 top-0 h-full w-72 z-50 flex flex-col md:hidden"
+            style={{ background: '#ffffff', borderRight: '1px solid #eeeeee' }}
+          >
+            <div className="h-14 flex items-center justify-between px-6" style={{ borderBottom: '1px solid #eeeeee' }}>
+              <span className="text-xs font-medium tracking-widest uppercase" style={{ color: '#27272a' }}>
+                {companyName}
+              </span>
+              <button onClick={() => setOpen(false)} style={{ color: '#a1a1aa' }}>
+                <X size={16} strokeWidth={1.5} />
               </button>
             </div>
 
-            <div className="px-3 mb-4 pb-4 border-b border-[rgba(0,0,0,0.06)]">
-              <p className="text-[10px] font-medium text-[rgba(0,0,0,0.35)] uppercase tracking-widest mb-0.5">Espace client</p>
-              <p className="text-[13px] font-medium text-[#0a0a0a] truncate">{companyName}</p>
-            </div>
-
-            <ul className="space-y-0.5 flex-1">
+            <ul className="flex-1 px-4 pt-4">
               {navItems.map(item => {
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
                 return (
@@ -69,21 +67,23 @@ export function MobileNav({ slug, companyName }: MobileNavProps) {
                       href={item.href}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        'flex items-center gap-2.5 px-3 py-[7px] rounded-[8px] text-[13px] transition-colors',
-                        isActive
-                          ? 'bg-[#f5f4f0] text-[#0a0a0a] font-medium'
-                          : 'text-[rgba(0,0,0,0.45)] hover:text-[#0a0a0a] hover:bg-[rgba(0,0,0,0.03)]'
+                        'relative flex items-center gap-3 px-4 py-2.5 text-sm transition-colors',
+                        isActive ? 'text-[#27272a]' : 'text-[#71717a] hover:text-[#27272a]'
                       )}
+                      style={isActive ? { background: 'rgba(250,250,248,0.8)' } : undefined}
                     >
-                      <item.icon size={14} strokeWidth={isActive ? 2 : 1.5} />
-                      {item.label}
+                      {isActive && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4" style={{ background: '#a8a29e' }} />
+                      )}
+                      <item.icon size={16} strokeWidth={1.5} style={{ color: isActive ? '#71717a' : '#a1a1aa' }} />
+                      <span className={isActive ? 'font-medium' : 'font-normal'}>{item.label}</span>
                     </Link>
                   </li>
                 )
               })}
             </ul>
 
-            <div className="px-3 pt-4 border-t border-[rgba(0,0,0,0.06)]">
+            <div className="px-8 pb-8" style={{ borderTop: '1px solid #eeeeee', paddingTop: '1.5rem' }}>
               <UserButton afterSignOutUrl="/sign-in" appearance={{ elements: { avatarBox: 'w-7 h-7' } }} />
             </div>
           </div>

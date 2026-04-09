@@ -2,118 +2,104 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  LayoutDashboard,
-  Zap,
-  ShoppingBag,
-  PenLine,
-} from 'lucide-react'
-import { UserButton, useUser } from '@clerk/nextjs'
-import { cn } from '@/lib/utils'
+import { LayoutDashboard, Zap, ShoppingBag, PenLine } from 'lucide-react'
+import { UserButton } from '@clerk/nextjs'
 import { BillingButton } from '@/components/ui/BillingButton'
-
-interface NavItem {
-  label: string
-  href: string
-  icon: React.ElementType
-}
-
-function buildNavItems(slug: string): NavItem[] {
-  return [
-    { label: 'Tableau de bord', href: `/${slug}/dashboard`, icon: LayoutDashboard },
-    { label: 'Mes automatisations', href: `/${slug}/automations`, icon: Zap },
-    { label: 'Marketplace', href: `/${slug}/marketplace`, icon: ShoppingBag },
-    { label: 'Sur mesure', href: `/${slug}/custom`, icon: PenLine },
-  ]
-}
+import { cn } from '@/lib/utils'
 
 interface SidebarProps {
   slug: string
   companyName: string
+  hasCallNotification?: boolean
 }
 
-export function Sidebar({ slug, companyName }: SidebarProps) {
+const navItems = (slug: string, hasCallNotification: boolean) => [
+  { label: 'Tableau de bord',      href: `/${slug}/dashboard`,    icon: LayoutDashboard },
+  { label: 'Automatisations',      href: `/${slug}/automations`,  icon: Zap },
+  { label: 'Marketplace',          href: `/${slug}/marketplace`,  icon: ShoppingBag },
+  { label: 'Sur mesure',           href: `/${slug}/custom`,       icon: PenLine,        badge: hasCallNotification },
+]
+
+export function Sidebar({ slug, companyName, hasCallNotification = false }: SidebarProps) {
   const pathname = usePathname()
-  const { user } = useUser()
-  const navItems = buildNavItems(slug)
+  const items = navItems(slug, hasCallNotification)
 
   return (
     <nav
       aria-label="Navigation principale"
-      className="flex flex-col h-full w-[220px] shrink-0 border-r border-[rgba(0,0,0,0.08)] bg-white px-2 py-4"
+      className="flex flex-col h-full w-72 shrink-0"
+      style={{ background: '#ffffff', borderRight: '1px solid #eeeeee' }}
     >
-      {/* Wordmark */}
-      <div className="px-3 mb-5">
-        <span className="text-[15px] font-semibold tracking-tight text-[#0a0a0a]">
-          acalmy
+      {/* Logo */}
+      <div className="h-20 flex items-center px-8">
+        <span
+          className="text-xs font-medium tracking-widest uppercase"
+          style={{ color: '#27272a' }}
+        >
+          {companyName}
         </span>
       </div>
 
-      {/* Tenant context */}
-      <div className="px-3 mb-5 pb-5 border-b border-[rgba(0,0,0,0.06)]">
-        <p className="text-[10px] font-medium text-[rgba(0,0,0,0.35)] uppercase tracking-widest mb-0.5">
+      {/* Nav section label */}
+      <div className="px-8 mb-2">
+        <p style={{ fontSize: '10px', fontWeight: 500, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#a1a1aa' }}>
           Espace client
-        </p>
-        <p className="text-[13px] font-medium text-[#0a0a0a] truncate leading-tight">
-          {companyName}
         </p>
       </div>
 
-      {/* Navigation */}
-      <ul className="space-y-0.5 flex-1" role="list">
-        {navItems.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`)
+      {/* Nav items */}
+      <ul className="flex-1 px-4" role="list">
+        {items.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+          const Icon = item.icon
 
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-2.5 px-3 py-[7px] rounded-[8px] text-[13px] transition-colors duration-100',
+                  'relative flex items-center gap-3 px-4 py-2.5 text-sm transition-colors',
                   isActive
-                    ? 'bg-[#f5f4f0] text-[#0a0a0a] font-medium'
-                    : 'text-[rgba(0,0,0,0.45)] hover:text-[#0a0a0a] hover:bg-[rgba(0,0,0,0.03)]'
+                    ? 'text-[#27272a]'
+                    : 'text-[#71717a] hover:text-[#27272a]'
                 )}
+                style={isActive ? { background: 'rgba(250,250,248,0.8)' } : undefined}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <item.icon
-                  size={14}
-                  strokeWidth={isActive ? 2 : 1.5}
-                  className="shrink-0"
-                />
-                {item.label}
+                {/* 2px left bar for active */}
+                {isActive && (
+                  <span
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4"
+                    style={{ background: '#a8a29e' }}
+                  />
+                )}
+                <Icon size={16} strokeWidth={1.5} className="shrink-0" style={{ color: isActive ? '#71717a' : '#a1a1aa' }} />
+                <span className={cn('flex-1 text-sm', isActive ? 'font-medium' : 'font-normal')}>
+                  {item.label}
+                </span>
+                {item.badge && !isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#a8a29e' }} />
+                )}
               </Link>
             </li>
           )
         })}
       </ul>
 
-      {/* Facturation */}
-      <div className="px-2 pb-1">
+      {/* Separator */}
+      <div className="mx-8 h-px" style={{ background: '#eeeeee' }} />
+
+      {/* Billing */}
+      <div className="px-4 mt-3 mb-3">
         <BillingButton slug={slug} />
       </div>
 
-      {/* User footer */}
-      <div className="px-3 pt-3 border-t border-[rgba(0,0,0,0.06)]">
-        <div className="flex items-center gap-2.5">
-          <UserButton
-            afterSignOutUrl="/sign-in"
-            appearance={{
-              elements: {
-                avatarBox: 'w-7 h-7',
-              },
-            }}
-          />
-          <div className="min-w-0">
-            <p className="text-[12px] font-medium text-[#0a0a0a] truncate leading-tight">
-              {user?.firstName ?? user?.emailAddresses[0]?.emailAddress ?? 'Mon compte'}
-            </p>
-            <p className="text-[11px] text-[rgba(0,0,0,0.35)] truncate leading-tight">
-              {user?.emailAddresses[0]?.emailAddress ?? ''}
-            </p>
-          </div>
-        </div>
+      {/* User */}
+      <div className="px-8 pb-8">
+        <UserButton
+          afterSignOutUrl="/sign-in"
+          appearance={{ elements: { avatarBox: 'w-7 h-7' } }}
+        />
       </div>
     </nav>
   )

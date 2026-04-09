@@ -32,6 +32,9 @@ const config: Config = {
         card: '12px',
         pill: '9999px',
       },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
     },
   },
   plugins: [],

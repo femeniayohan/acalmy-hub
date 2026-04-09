@@ -27,28 +27,30 @@ type ClerkUserEvent = {
 export async function POST(request: NextRequest) {
   const webhookSecret = process.env.CLERK_WEBHOOK_SECRET
 
-  // If no secret configured, accept without verification (dev only)
+  if (!webhookSecret) {
+    console.error('[Clerk webhook] CLERK_WEBHOOK_SECRET not set — rejecting request')
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
+  }
+
   const body = await request.text()
 
-  if (webhookSecret) {
-    const svixId = request.headers.get('svix-id')
-    const svixTimestamp = request.headers.get('svix-timestamp')
-    const svixSignature = request.headers.get('svix-signature')
+  const svixId = request.headers.get('svix-id')
+  const svixTimestamp = request.headers.get('svix-timestamp')
+  const svixSignature = request.headers.get('svix-signature')
 
-    if (!svixId || !svixTimestamp || !svixSignature) {
-      return NextResponse.json({ error: 'Missing svix headers' }, { status: 400 })
-    }
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    return NextResponse.json({ error: 'Missing svix headers' }, { status: 400 })
+  }
 
-    try {
-      const wh = new Webhook(webhookSecret)
-      wh.verify(body, {
-        'svix-id': svixId,
-        'svix-timestamp': svixTimestamp,
-        'svix-signature': svixSignature,
-      })
-    } catch {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
-    }
+  try {
+    const wh = new Webhook(webhookSecret)
+    wh.verify(body, {
+      'svix-id': svixId,
+      'svix-timestamp': svixTimestamp,
+      'svix-signature': svixSignature,
+    })
+  } catch {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
   let event: ClerkUserEvent

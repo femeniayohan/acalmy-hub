@@ -1,9 +1,8 @@
 import Link from 'next/link'
-import { StatusDot } from '@/components/ui/StatusDot'
-import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatRelativeTime } from '@/lib/utils'
-import { Settings, ChevronRight } from 'lucide-react'
+import { Settings } from 'lucide-react'
 import type { Automation } from '@/lib/supabase/types'
+import { cn } from '@/lib/utils'
 
 interface AutomationCardProps {
   automation: Automation
@@ -14,26 +13,15 @@ interface AutomationCardProps {
 function getSubtitle(automation: Automation): string {
   switch (automation.status) {
     case 'active':
-      if (automation.last_run_at) {
-        return `${automation.monthly_runs} exécutions ce mois · Dernière ${formatRelativeTime(automation.last_run_at)}`
-      }
-      return `${automation.monthly_runs} exécutions ce mois`
-
+      return automation.last_run_at
+        ? `${automation.monthly_runs} exécutions · dernière ${formatRelativeTime(automation.last_run_at)}`
+        : `${automation.monthly_runs} exécutions ce mois`
     case 'paused':
-      return 'En pause · Contactez Acalmy pour reprendre'
-
+      return 'En pause'
     case 'error':
-      if (automation.last_run_at) {
-        return `Dernière erreur ${formatRelativeTime(automation.last_run_at)}`
-      }
-      return 'Une erreur est survenue · Contactez Acalmy'
-
+      return automation.last_run_at ? `Erreur ${formatRelativeTime(automation.last_run_at)}` : 'Erreur'
     case 'pending':
-      if (!automation.credentials_configured) {
-        return 'Configuration requise pour activer'
-      }
-      return 'En cours d\'activation…'
-
+      return !automation.credentials_configured ? 'Configuration requise' : 'Activation en cours…'
     default:
       return ''
   }
@@ -41,39 +29,51 @@ function getSubtitle(automation: Automation): string {
 
 export function AutomationCard({ automation, slug, templateId }: AutomationCardProps) {
   const subtitle = getSubtitle(automation)
+  const isInactive = automation.status !== 'active'
+
+  const isActive = automation.status === 'active'
 
   return (
-    <div className="card p-4 flex items-center gap-4 group">
-      <StatusDot status={automation.status} pulse className="shrink-0" />
+    <div
+      className={cn('flex items-center gap-5 px-6 py-4 group transition-colors', isInactive && 'opacity-40')}
+      style={{ background: '#ffffff', boxShadow: '0 2px 12px rgba(0,0,0,0.01)' }}
+    >
+      {/* Dot statut */}
+      <span
+        className="shrink-0 w-2 h-2 rounded-full"
+        style={{ background: isActive ? '#16a34a' : '#d4d4d8' }}
+      />
 
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-medium text-[#0a0a0a] truncate">
+        <p className="text-sm font-medium truncate" style={{ color: '#27272a' }}>
           {automation.name}
         </p>
         {subtitle && (
-          <p className="text-xs text-[rgba(0,0,0,0.4)] mt-0.5 truncate">{subtitle}</p>
+          <p
+            className="text-xs font-light mt-0.5 truncate uppercase tracking-widest"
+            style={{ color: isActive ? '#16a34a' : '#a1a1aa' }}
+          >
+            {subtitle}
+          </p>
         )}
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        <StatusBadge status={automation.status} />
-
+      {/* Actions — revealed on hover */}
+      <div className="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
         {!automation.credentials_configured && automation.status === 'pending' && templateId && (
           <Link
             href={`/${slug}/marketplace?template=${templateId}`}
-            className="btn-secondary text-xs px-2.5 py-1 gap-1"
+            className="btn-secondary text-xs px-3 py-1"
           >
-            <Settings size={12} />
+            <Settings size={12} strokeWidth={1.5} />
             Configurer
           </Link>
         )}
-
         <Link
           href={`/${slug}/automations/${automation.id}`}
-          className="inline-flex items-center gap-1 text-xs text-[rgba(0,0,0,0.4)] hover:text-[#0a0a0a] transition-colors px-2 py-1 rounded-[6px] hover:bg-[#f5f4f0]"
+          className="btn-ghost text-xs px-3 py-1"
         >
           Détails
-          <ChevronRight size={12} />
         </Link>
       </div>
     </div>

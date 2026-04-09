@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Check, Server } from 'lucide-react'
+import { Loader2, Check, Server, Wifi, WifiOff } from 'lucide-react'
 
 interface N8nProvisioningFormProps {
   tenantId: string
@@ -15,6 +15,18 @@ export function N8nProvisioningForm({ tenantId, currentUrl, hasApiKey }: N8nProv
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle')
+
+  async function handleTest() {
+    setTestStatus('testing')
+    try {
+      const res = await fetch(`/api/admin/tenants/${tenantId}/n8n-test`, { method: 'POST' })
+      const d = await res.json()
+      setTestStatus(d.ok ? 'ok' : 'fail')
+    } catch {
+      setTestStatus('fail')
+    }
+  }
 
   async function handleSave() {
     if (!url.trim()) return
@@ -80,14 +92,31 @@ export function N8nProvisioningForm({ tenantId, currentUrl, hasApiKey }: N8nProv
           />
         </div>
         {error && <p className="text-xs text-[#dc2626]">{error}</p>}
-        <button
-          onClick={handleSave}
-          disabled={loading || !url.trim()}
-          className="btn-primary text-sm gap-2"
-        >
-          {loading ? <Loader2 size={13} className="animate-spin" /> : saved ? <Check size={13} /> : null}
-          {saved ? 'Enregistré' : 'Enregistrer'}
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={handleSave}
+            disabled={loading || !url.trim()}
+            className="btn-primary text-sm gap-2"
+          >
+            {loading ? <Loader2 size={13} className="animate-spin" /> : saved ? <Check size={13} /> : null}
+            {saved ? 'Enregistré' : 'Enregistrer'}
+          </button>
+          {hasApiKey && (
+            <button
+              onClick={handleTest}
+              disabled={testStatus === 'testing'}
+              className="btn-secondary text-sm gap-2"
+            >
+              {testStatus === 'testing' && <Loader2 size={13} className="animate-spin" />}
+              {testStatus === 'ok' && <Wifi size={13} className="text-emerald-600" />}
+              {testStatus === 'fail' && <WifiOff size={13} className="text-[#dc2626]" />}
+              {testStatus === 'idle' && <Wifi size={13} />}
+              Tester
+            </button>
+          )}
+          {testStatus === 'ok' && <span className="text-xs text-emerald-600 font-medium">Connexion OK</span>}
+          {testStatus === 'fail' && <span className="text-xs text-[#dc2626] font-medium">Connexion échouée</span>}
+        </div>
       </div>
     </div>
   )

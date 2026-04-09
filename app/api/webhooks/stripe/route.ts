@@ -38,6 +38,20 @@ export async function POST(request: NextRequest) {
         break
       }
 
+      // ── Idempotency: skip if this session was already processed ───────────
+      const { data: existingSub } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('tenant_id', tenantId)
+        .eq('template_id', templateId)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      if (existingSub) {
+        console.log('[Stripe webhook] Already processed — skipping:', session.id)
+        break
+      }
+
       // Fetch template to get name and config_schema
       const { data: template } = await supabase
         .from('marketplace_templates')

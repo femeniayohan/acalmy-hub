@@ -45,6 +45,18 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     auth().protect()
   }
 
+  // ── 2a. Admin routes: vérifier l'organisation Clerk ───────────────────────
+  // La vérification approfondie est faite dans AdminLayout via le Backend SDK.
+  // Ici on vérifie rapidement que l'orgId actif correspond à l'org admin (JWT).
+  const isAdminRoute = url.pathname.startsWith('/admin')
+  const adminOrgId = process.env.CLERK_ADMIN_ORG_ID
+  if (isAdminRoute && !isPublicRoute(request) && adminOrgId) {
+    const { orgId } = auth()
+    if (!orgId || orgId !== adminOrgId) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
   // ── 2b. Root redirect → onboarding ────────────────────────────────────────
   if (isRootRoute(request) && auth().userId) {
     return NextResponse.redirect(new URL('/onboarding', request.url))

@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { redirect, notFound } from 'next/navigation'
 import { auth } from '@clerk/nextjs/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { MobileNav } from '@/components/layout/MobileNav'
 
@@ -19,18 +20,35 @@ export default async function HubLayout({ children, params }: HubLayoutProps) {
 
   if (!tenantId) notFound()
 
+  // Check for pending call requests (for sidebar badge)
+  let hasCallNotification = false
+  try {
+    const supabase = createServiceClient()
+    const { data } = await supabase
+      .from('custom_requests')
+      .select('id')
+      .eq('tenant_id', tenantId)
+      .eq('call_requested', true)
+      .is('proposed_slot', null)
+      .limit(1)
+    hasCallNotification = (data?.length ?? 0) > 0
+  } catch { /* table may not exist yet */ }
+
   return (
-    <div className="flex h-screen bg-[#fafaf9] overflow-hidden">
-      {/* Desktop sidebar */}
-      <div className="hidden md:flex">
-        <Sidebar slug={params.slug} companyName={tenantCompany} />
+    <div className="flex h-screen" style={{ background: 'var(--bg)' }}>
+      {/* Desktop sidebar — flush, pas de padding autour */}
+      <div className="hidden md:block shrink-0">
+        <Sidebar slug={params.slug} companyName={tenantCompany} hasCallNotification={hasCallNotification} />
       </div>
 
-      {/* Mobile layout */}
-      <div className="flex flex-col flex-1 md:flex-none md:contents overflow-hidden">
-        <MobileNav slug={params.slug} companyName={tenantCompany} />
+      {/* Contenu */}
+      <div className="flex flex-col flex-1 min-w-0">
+        {/* Mobile nav */}
+        <div className="md:hidden">
+          <MobileNav slug={params.slug} companyName={tenantCompany} />
+        </div>
 
-        <main className="flex-1 overflow-auto" id="main-content">
+        <main className="flex-1 overflow-auto min-w-0" id="main-content">
           {children}
         </main>
       </div>

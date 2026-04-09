@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, Package, Activity, LayoutDashboard } from 'lucide-react'
+import { Users, Package, Activity, LayoutDashboard, PenLine } from 'lucide-react'
 import { UserButton } from '@clerk/nextjs'
 import { cn } from '@/lib/utils'
 
@@ -11,6 +11,7 @@ const adminNavItems = [
   { label: 'Clients', href: '/admin/clients', icon: Users },
   { label: 'Templates', href: '/admin/templates', icon: Package },
   { label: 'Exécutions', href: '/admin/executions', icon: Activity },
+  { label: 'Demandes', href: '/admin/requests', icon: PenLine },
 ]
 
 export function AdminSidebar() {

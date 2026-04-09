@@ -119,7 +119,10 @@ export function MarketplaceClient({
       {selectedTemplate && (
         <TemplatePanel
           template={selectedTemplate}
-          isSubscribed={subscribedTemplateIds.includes(selectedTemplate.id)}
+          isSubscribed={
+            subscribedTemplateIds.includes(selectedTemplate.id) ||
+            selectedTemplate.id === postCheckoutTemplateId
+          }
           tenantId={tenantId}
           slug={slug}
           onClose={() => setSelectedTemplate(null)}

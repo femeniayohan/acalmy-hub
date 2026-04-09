@@ -1,25 +1,26 @@
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { createServiceClient } from '@/lib/supabase/server'
 import { AdminSidebar } from '@/components/layout/AdminSidebar'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { userId } = auth()
 
-  if (!userId) {
-    redirect('/sign-in')
+  if (!userId) redirect('/sign-in')
+
+  const adminOrgId = process.env.CLERK_ADMIN_ORG_ID
+  if (!adminOrgId) {
+    console.error('[AdminLayout] CLERK_ADMIN_ORG_ID is not set')
+    redirect('/')
   }
 
-  // Verify admin role in Supabase (server-side, not client-side)
-  const supabase = createServiceClient()
-  const { data: user } = await supabase
-    .from('users')
-    .select('role')
-    .eq('clerk_user_id', userId)
-    .single()
-
-  if (!user || user.role !== 'admin') {
-    // Not an admin — redirect to home or a 403 page
+  // Vérification via Clerk Backend SDK — impossible à contourner côté client
+  // Récupère toutes les organisations du user et vérifie qu'il est membre de l'org admin
+  try {
+    const client = await clerkClient()
+    const { data: memberships } = await client.users.getOrganizationMembershipList({ userId })
+    const isAdminMember = memberships.some(m => m.organization.id === adminOrgId)
+    if (!isAdminMember) redirect('/')
+  } catch {
     redirect('/')
   }
 

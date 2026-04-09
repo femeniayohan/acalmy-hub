@@ -121,23 +121,36 @@ export async function updateCredential(
 }
 
 /**
- * Deploy a template workflow for a specific tenant.
- * Creates a copy of the template workflow in the tenant's n8n instance.
+ * Returns the global admin n8n instance from env vars.
+ * This is the template library — client instances are stored in Supabase tenants table.
+ */
+export function getAdminInstance(): N8nInstance {
+  const baseUrl = process.env.N8N_BASE_URL
+  const apiKey = process.env.N8N_API_KEY
+  if (!baseUrl || !apiKey) throw new Error('N8N_BASE_URL or N8N_API_KEY not set')
+  return { baseUrl, apiKey }
+}
+
+/**
+ * Deploy a template workflow from the admin n8n instance to a client's n8n instance.
+ * Fetches the workflow definition from the admin instance, then creates it on the client's.
  */
 export async function deployTemplateWorkflow(
-  instance: N8nInstance,
+  clientInstance: N8nInstance,
   templateId: string,
   tenantSlug: string
 ): Promise<{ workflowId: string }> {
-  // Fetch full workflow definition
+  const adminInstance = getAdminInstance()
+
+  // Fetch full workflow definition from admin instance
   const template = await n8nFetch<N8nWorkflow & {
     nodes: unknown[]
     connections: Record<string, unknown>
     settings?: Record<string, unknown>
-  }>(instance, `/workflows/${templateId}`)
+  }>(adminInstance, `/workflows/${templateId}`)
 
-  // POST /workflows only accepts: name, nodes, connections, settings
-  const newWorkflow = await n8nFetch<N8nWorkflow>(instance, '/workflows', {
+  // Create workflow on client's instance
+  const newWorkflow = await n8nFetch<N8nWorkflow>(clientInstance, '/workflows', {
     method: 'POST',
     body: JSON.stringify({
       name: `[${tenantSlug}] ${template.name}`,
@@ -148,4 +161,17 @@ export async function deployTemplateWorkflow(
   })
 
   return { workflowId: newWorkflow.id }
+}
+
+/**
+ * Test connectivity to a given n8n instance.
+ * Returns true if the instance is reachable and the API key is valid.
+ */
+export async function testConnection(instance: N8nInstance): Promise<boolean> {
+  try {
+    await n8nFetch(instance, '/workflows?limit=1')
+    return true
+  } catch {
+    return false
+  }
 }
